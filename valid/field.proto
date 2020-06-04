@@ -1,0 +1,194 @@
+syntax = "proto3";
+
+package valid;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/bitcdr/protovalid/valid";
+
+extend google.protobuf.FieldOptions {
+  FieldConstraints field = 50000;
+}
+
+message FieldConstraints {
+  oneof type {
+    DoubleConstraints double = 1;
+    FloatConstraints float = 2;
+    Int32Constraints int32 = 3;
+    Int64Constraints int64 = 4;
+    // uint32
+    // uint64
+    // sint32
+    // sint64
+    // fixed32
+    // fixed64
+    // sfixed32
+    // sfixed64
+    BoolConstraints bool = 13;
+    StringConstraints string = 14;
+    BytesConstraints bytes = 15;
+    RepeatedConstraints repeated = 16;
+    MapConstraints map = 17;
+    EnumConstraints enum = 18;
+  }
+
+  message DoubleConstraints {
+    oneof min {
+      double gte = 1;
+      double gt = 2;
+    }
+
+    oneof max {
+      double lte = 3;
+      double lt = 4;
+    }
+
+    double eps = 5;
+
+    string msg = 6;
+    Level level = 7;
+  }
+
+  message FloatConstraints {
+    oneof min {
+      double gte = 1;
+      double gt = 2;
+    }
+
+    oneof max {
+      double lte = 3;
+      double lt = 4;
+    }
+
+    double eps = 5;
+
+    string msg = 6;
+    Level level = 7;
+  }
+
+  message Int32Constraints {
+    oneof min {
+      int32 gte = 1;
+      int32 gt = 2;
+    }
+
+    oneof max {
+      int32 lte = 3;
+      int32 lt = 4;
+    }
+
+    repeated int32 in = 5;
+    repeated int32 not_in = 6;
+    int32 eq = 7;
+
+    string msg = 8;
+    Level level = 9;
+  }
+
+  message Int64Constraints {
+    oneof min {
+      int64 gte = 1;
+      int64 gt = 2;
+    }
+
+    oneof max {
+      int64 lte = 3;
+      int64 lt = 4;
+    }
+
+    repeated int64 in = 5;
+    repeated int64 not_in = 6;
+    int64 eq = 7;
+
+    string msg = 8;
+    Level level = 9;
+  }
+
+  message BoolConstraints {
+    bool eq = 1;
+  }
+
+  message StringConstraints {
+    oneof empty_type {
+      bool empty = 1;
+      bool not_empty = 2;
+    }
+
+    uint32 len_eq = 3;
+    uint32 len_gte = 4;
+    uint32 len_lte = 5;
+
+    string eq = 6;
+    string pattern = 7;
+
+    string msg = 8;
+    Level level = 9;
+  }
+
+  message BytesConstraints {
+    oneof empty_type {
+      bool empty = 1;
+      bool not_empty = 2;
+    }
+
+    uint32 len_eq = 3;
+    uint32 len_gte = 4;
+    uint32 len_lte = 5;
+
+    string msg = 8;
+    Level level = 9;
+  }
+
+  message RepeatedConstraints {
+    oneof empty_type {
+      bool empty = 1;
+      bool not_empty = 2;
+    }
+
+    uint32 len_gte = 3;
+    uint32 len_lte = 4;
+    uint32 len_eq = 5;
+
+    string msg = 8;
+    Level level = 9;
+
+    FieldConstraints elems = 10;
+  }
+
+  message MapConstraints {
+    oneof empty_type {
+      bool empty = 1;
+      bool not_empty = 2;
+    }
+
+    uint32 len_gte = 3;
+    uint32 len_lte = 4;
+    uint32 len_eq = 5;
+
+    string msg = 8;
+    Level level = 9;
+
+    FieldConstraints keys = 10;
+    FieldConstraints values = 11;
+  }
+
+  message EnumConstraints {
+    bool recognized = 1;
+
+    repeated uint32 in = 2;
+    repeated uint32 not_in = 3;
+
+    uint32 eq = 4;
+
+    string msg = 8;
+    Level level = 9;
+  }
+}
+
+enum Level {
+  LEVEL_UNSPECIFIED = 0;
+  LEVEL_DEBUG = 1;
+  LEVEL_INFO = 2;
+  LEVEL_WARN = 3;
+  LEVEL_ERROR = 4;
+}

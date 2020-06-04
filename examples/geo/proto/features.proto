@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package examples.geo.proto;
+
+import "valid/field.proto";
+
+option go_package = "github.com/bitcdr/protovalid/examples/geo/proto";
+
+message Features {
+  // Points of Interest (POI).
+  repeated PoiFeature pois = 1;
+
+  // Tracks.
+  repeated TrackFeature tracks = 2;
+
+  // Geographic coordinate in WGS84 reference system.
+  message Coordinate {
+    // Longitude.
+    double longitude = 1 [(valid.field).double = {gte: -180 lt: 180 level: LEVEL_ERROR}];
+    // Latitude.
+    double latitude = 2 [(valid.field).double = {gte: -90 lte: 90 level: LEVEL_ERROR}];
+  }
+
+  // Point of Interest feature with point geometry.
+  message PoiFeature {
+    // Name.
+    string name = 1 [(valid.field).string = {not_empty: true level: LEVEL_WARN}];
+    // Foreign names.
+    repeated string foreign_names = 2;
+    // Geographic coordinate in WGS84 reference system.
+    Coordinate coordinate = 3;
+    // Marker.
+    Marker marker = 4;
+
+    // Marker.
+    message Marker {
+      // Color as RGB in hex.
+      string color = 1 [(valid.field).string.pattern = "^#[0-9a-f]{6}$"];
+      // Size.
+      Size size = 2 [(valid.field).enum.recognized = true];
+
+      // Size.
+      enum Size {
+        SIZE_UNSPECIFIED = 0;
+        SIZE_SMALL = 1;
+        SIZE_MEDIUM = 2;
+        SIZE_LARGE = 3;
+      }
+    }
+  }
+
+  message TrackFeature {
+    // Name.
+    string name = 1 [(valid.field).string.not_empty = true];
+    // Geographic coordinates in WGS84 reference system.
+    repeated Coordinate coordinates = 2 [(valid.field).repeated.len_gte = 2];
+    // Stroke.
+    Stroke stroke = 3;
+
+    // Stroke.
+    message Stroke {
+      // Color as RGB in hex.
+      string color = 1 [(valid.field).string.pattern = "^#[0-9a-f]{6}$"];
+      // Width.
+      int32 width = 2 [(valid.field).int32 = {gte: 1 lte: 10}];
+    }
+  }
+}
