@@ -3,12 +3,13 @@ package validate
 
 import (
 	"fmt"
+	"regexp"
+
 	"github.com/bitcdr/protovalid/extension"
 	"github.com/bitcdr/protovalid/path"
 	pb "github.com/bitcdr/protovalid/valid"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"regexp"
 )
 
 // Message validates the protobuf message and checks the field options and returns the validation findings.
@@ -87,7 +88,7 @@ func validateDouble(fieldPath *path.FieldPath, fd protoreflect.FieldDescriptor, 
 		switch x := c.Max.(type) {
 		case *pb.FieldConstraints_DoubleConstraints_Lte:
 			if v > x.Lte {
-				path.AddFinding(fieldPath, fmt.Sprintf("value %f is greater than than %f", v, x.Lte))
+				path.AddFinding(fieldPath, fmt.Sprintf("value %f is greater than %f", v, x.Lte))
 			}
 		case *pb.FieldConstraints_DoubleConstraints_Lt:
 			if v <= x.Lt {
@@ -118,7 +119,7 @@ func validateInt32(fieldPath *path.FieldPath, fd protoreflect.FieldDescriptor, v
 		switch x := c.Max.(type) {
 		case *pb.FieldConstraints_Int32Constraints_Lte:
 			if v > x.Lte {
-				path.AddFinding(fieldPath, fmt.Sprintf("value %d is greater than than %d", v, x.Lte))
+				path.AddFinding(fieldPath, fmt.Sprintf("value %d is greater than %d", v, x.Lte))
 			}
 		case *pb.FieldConstraints_Int32Constraints_Lt:
 			if v <= x.Lt {
