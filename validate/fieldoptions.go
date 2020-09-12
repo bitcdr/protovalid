@@ -8,6 +8,7 @@ import (
 	"github.com/bitcdr/protovalid/extension"
 	"github.com/bitcdr/protovalid/path"
 	pb "github.com/bitcdr/protovalid/valid"
+	"github.com/bitcdr/protovalid/wrappers"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -24,9 +25,9 @@ func validateNestedMessage(fieldPath *path.FieldPath, m protoreflect.Message) {
 		fieldName := string(fd.Name())
 		fieldPathChild := path.GetChild(fieldPath, fieldName)
 
-		// Field is repeated
+		// Field is repeated / list
 		if fd.IsList() {
-			// TODO validateList(fieldPathChild, fd, v.List())
+			validateList(fieldPathChild, fd, v.List())
 
 			// List elements
 			for i := 0; i < v.List().Len(); i++ {
@@ -42,15 +43,25 @@ func validateNestedMessage(fieldPath *path.FieldPath, m protoreflect.Message) {
 				case protoreflect.StringKind:
 					validateString(fieldPathChildWithIndex, fd, elemValue.String())
 				case protoreflect.MessageKind:
-					// Descend into fields of type Message
-					validateNestedMessage(fieldPathChildWithIndex, elemValue.Message())
+					// Wrapper types
+					switch fd.Message().FullName() {
+					case "google.protobuf.DoubleValue":
+						validateDouble(fieldPathChildWithIndex, fd, wrappers.GetFloat64(fd, elemValue))
+					case "google.protobuf.Int32Value":
+						validateInt32(fieldPathChildWithIndex, fd, wrappers.GetInt32(fd, elemValue))
+					case "google.protobuf.StringValue":
+						validateString(fieldPathChildWithIndex, fd, wrappers.GetString(fd, elemValue))
+					default:
+						// Descend into fields of type Message
+						validateNestedMessage(fieldPathChildWithIndex, elemValue.Message())
+					}
 				}
 			}
 
 			return true
 		}
 
-		// Field is not repeated or map
+		// Field is not repeated / list or map
 		switch fd.Kind() {
 		case protoreflect.DoubleKind:
 			validateDouble(fieldPathChild, fd, v.Float())
@@ -59,8 +70,18 @@ func validateNestedMessage(fieldPath *path.FieldPath, m protoreflect.Message) {
 		case protoreflect.StringKind:
 			validateString(fieldPathChild, fd, v.String())
 		case protoreflect.MessageKind:
-			// Descend into fields of type Message
-			validateNestedMessage(fieldPathChild, v.Message())
+			// Wrapper types
+			switch fd.Message().FullName() {
+			case "google.protobuf.Int32Value":
+				validateInt32(fieldPathChild, fd, wrappers.GetInt32(fd, v))
+			case "google.protobuf.DoubleValue":
+				validateDouble(fieldPathChild, fd, wrappers.GetFloat64(fd, v))
+			case "google.protobuf.StringValue":
+				validateString(fieldPathChild, fd, wrappers.GetString(fd, v))
+			default:
+				// Descend into fields of type Message
+				validateNestedMessage(fieldPathChild, v.Message())
+			}
 		}
 
 		return true
@@ -188,6 +209,37 @@ func validateString(fieldPath *path.FieldPath, fd protoreflect.FieldDescriptor, 
 				path.AddFinding(fieldPath, fmt.Sprintf("invalid regex %s", c.Pattern), c.Level, c.Msg)
 			} else if !regex.MatchString(v) {
 				path.AddFinding(fieldPath, fmt.Sprintf("value %s doesn't match regex %s", v, c.Pattern), c.Level, c.Msg)
+			}
+		}
+	}
+}
+
+func validateList(fieldPath *path.FieldPath, fd protoreflect.FieldDescriptor, v protoreflect.List) {
+	if ok, c := extension.GetFieldConstraintsRepeated(fd); ok {
+		length := uint32(v.Len())
+
+		// Empty and not empty
+		switch x := c.EmptyType.(type) {
+		case *pb.FieldConstraints_RepeatedConstraints_Empty:
+			if x.Empty && length > 0 {
+				path.AddFinding(fieldPath, "list is not empty", c.Level, c.Msg)
+			}
+		case *pb.FieldConstraints_RepeatedConstraints_NotEmpty:
+			if x.NotEmpty && length == 0 {
+				path.AddFinding(fieldPath, "list is empty", c.Level, c.Msg)
+			}
+		}
+
+		// Length equal, gte, lte
+		if c.LenEq > 0 && length != c.LenEq {
+			path.AddFinding(fieldPath, fmt.Sprintf("length of value list is not %d", c.LenEq), c.Level, c.Msg)
+		} else {
+			if c.LenGte > 0 && length < c.LenGte {
+				path.AddFinding(fieldPath, fmt.Sprintf("length of list is less than %d", c.LenEq), c.Level, c.Msg)
+			}
+
+			if c.LenLte > 0 && length > c.LenLte {
+				path.AddFinding(fieldPath, fmt.Sprintf("length of list is greater than %d", c.LenEq), c.Level, c.Msg)
 			}
 		}
 	}
