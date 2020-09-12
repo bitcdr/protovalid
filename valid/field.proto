@@ -1,14 +1,19 @@
+// Custom field options for validation of protobuf fields.
+//
+// See also
+// https://developers.google.com/protocol-buffers/docs/proto#customoptions.
+
 syntax = "proto3";
 
 package valid;
 
 import "google/protobuf/descriptor.proto";
 
+import "valid/level.proto";
+
 option go_package = "github.com/bitcdr/protovalid/valid";
 
-extend google.protobuf.FieldOptions {
-  FieldConstraints field = 50000;
-}
+extend google.protobuf.FieldOptions { FieldConstraints field = 80000; }
 
 message FieldConstraints {
   oneof type {
@@ -16,20 +21,12 @@ message FieldConstraints {
     FloatConstraints float = 2;
     Int32Constraints int32 = 3;
     Int64Constraints int64 = 4;
-    // uint32
-    // uint64
-    // sint32
-    // sint64
-    // fixed32
-    // fixed64
-    // sfixed32
-    // sfixed64
-    BoolConstraints bool = 13;
-    StringConstraints string = 14;
-    BytesConstraints bytes = 15;
-    RepeatedConstraints repeated = 16;
-    MapConstraints map = 17;
-    EnumConstraints enum = 18;
+    BoolConstraints bool = 5;
+    StringConstraints string = 6;
+    BytesConstraints bytes = 7;
+    RepeatedConstraints repeated = 8;
+    MapConstraints map = 9;
+    EnumConstraints enum = 10;
   }
 
   message DoubleConstraints {
@@ -51,16 +48,16 @@ message FieldConstraints {
 
   message FloatConstraints {
     oneof min {
-      double gte = 1;
-      double gt = 2;
+      float gte = 1;
+      float gt = 2;
     }
 
     oneof max {
-      double lte = 3;
-      double lt = 4;
+      float lte = 3;
+      float lt = 4;
     }
 
-    double eps = 5;
+    float eps = 5;
 
     string msg = 6;
     Level level = 7;
@@ -104,9 +101,7 @@ message FieldConstraints {
     Level level = 9;
   }
 
-  message BoolConstraints {
-    bool eq = 1;
-  }
+  message BoolConstraints { bool eq = 1; }
 
   message StringConstraints {
     oneof empty_type {
@@ -135,8 +130,8 @@ message FieldConstraints {
     uint32 len_gte = 4;
     uint32 len_lte = 5;
 
-    string msg = 8;
-    Level level = 9;
+    string msg = 6;
+    Level level = 7;
   }
 
   message RepeatedConstraints {
@@ -149,8 +144,8 @@ message FieldConstraints {
     uint32 len_lte = 4;
     uint32 len_eq = 5;
 
-    string msg = 8;
-    Level level = 9;
+    string msg = 6;
+    Level level = 7;
 
     FieldConstraints elems = 10;
   }
@@ -165,11 +160,11 @@ message FieldConstraints {
     uint32 len_lte = 4;
     uint32 len_eq = 5;
 
-    string msg = 8;
-    Level level = 9;
+    string msg = 6;
+    Level level = 7;
 
-    FieldConstraints keys = 10;
-    FieldConstraints values = 11;
+    FieldConstraints keys = 8;
+    FieldConstraints values = 9;
   }
 
   message EnumConstraints {
@@ -180,15 +175,7 @@ message FieldConstraints {
 
     uint32 eq = 4;
 
-    string msg = 8;
-    Level level = 9;
+    string msg = 5;
+    Level level = 6;
   }
-}
-
-enum Level {
-  LEVEL_UNSPECIFIED = 0;
-  LEVEL_DEBUG = 1;
-  LEVEL_INFO = 2;
-  LEVEL_WARN = 3;
-  LEVEL_ERROR = 4;
 }

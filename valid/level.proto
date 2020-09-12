@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package valid;
+
+option go_package = "github.com/bitcdr/protovalid/valid";
+
+enum Level {
+  LEVEL_UNSPECIFIED = 0;
+  LEVEL_DEBUG = 1;
+  LEVEL_INFO = 2;
+  LEVEL_WARN = 3;
+  LEVEL_ERROR = 4;
+}

@@ -1,0 +1,30 @@
+// Custom field options for validation of protobuf messages.
+//
+// See also
+// https://developers.google.com/protocol-buffers/docs/proto#customoptions.
+
+syntax = "proto3";
+
+package valid;
+
+import "google/protobuf/descriptor.proto";
+
+import "valid/level.proto";
+
+option go_package = "github.com/bitcdr/protovalid/valid";
+
+extend google.protobuf.FieldOptions { MessageConstraints message = 80001; }
+
+message MessageConstraints {
+  oneof type {
+    SetConstraints set = 1;
+    SetConstraints not_set = 2;
+  }
+
+  message SetConstraints {
+    repeated string name = 1;
+
+    string msg = 2;
+    Level level = 3;
+  }
+}
